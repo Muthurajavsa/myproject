@@ -8,31 +8,28 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Drupal\Core\Config\ConfigFactoryInterface;
 
 
-class JsonRepresentationNode extends ControllerBase {
-
-	public function nodedata($nodeid) {
-		$json_array = array(
-		  'data' => array()
-		);
-		
-		$api_key = \Drupal::config('axelerant.setting')->get('site_api_key');
-		$node_details = Node::load($nodeid); //Get the Node details using NodeId
-		if($node_details->get('nid')->isEmpty()){
-			throw new \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException();
-		}else{
-			$json_array['data'][] = array(
-				'id' => $node_details->get('nid')->value,
-				'type' => $node_details->get('type')->target_id,
-				'api_key' => $api_key,
-				'attributes' => array(
-				  'title' =>  $node_details->get('title')->value,
-				  'content' => $node_details->get('body')->value,
-				),
-			);
-		}
-		
-		return new JsonResponse($json_array); // Return The JSON response.
-	}
+public function nodedata() {
+	$json_array = array(
+      'data' => array()
+    );
+	
+	$api_key = \Drupal::config('axelerant.settings')->get('site_api_key');
+	
+	$nids = \Drupal::entityQuery('node')->condition('type','page')->execute();
+    $nodes =  Node::loadMultiple($nids);
+    foreach ($nodes as $node) {
+      $json_array['data'][] = array(
+        'type' => $node->get('type')->target_id,
+        'id' => $node->get('nid')->value,
+		'site_api_key' => $api_key,
+        'attributes' => array(
+          'title' =>  $node->get('title')->value,
+          'content' => $node->get('body')->value,
+        ),
+      );
+    }
+    return new JsonResponse($json_array);
+  }
 }
 
 
