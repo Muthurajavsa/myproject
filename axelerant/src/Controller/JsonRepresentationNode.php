@@ -17,8 +17,10 @@ class JsonRepresentationNode extends ControllerBase {
 		
 		$api_key = \Drupal::config('axelerant.setting')->get('site_api_key');
 		$node_details = Node::load($nodeid); //Get the Node details using NodeId
-		$test = $node_details->get('title')->value;
-		$json_array['data'][] = array(
+		if($node_details->get('nid')->isEmpty()){
+			throw new \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException();
+		}else{
+			$json_array['data'][] = array(
 				'id' => $node_details->get('nid')->value,
 				'type' => $node_details->get('type')->target_id,
 				'api_key' => $api_key,
@@ -26,7 +28,9 @@ class JsonRepresentationNode extends ControllerBase {
 				  'title' =>  $node_details->get('title')->value,
 				  'content' => $node_details->get('body')->value,
 				),
-		);
+			);
+		}
+		
 		return new JsonResponse($json_array); // Return The JSON response.
 	}
 }
